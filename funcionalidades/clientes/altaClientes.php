@@ -1,5 +1,8 @@
 <?php
 require_once __DIR__ . '/../../includes/Database.php';
+require_once './clases/Cabanas.php';
+require_once './clases/Reservas.php';
+require_once './clases/Clientes.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Validación y procesamiento del formulario
@@ -29,7 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 </head>
 <body>
     <h1>Alta de Cliente</h1>
-    <form method="POST" action="../funcionalidades/clientes/altaCliente.php">
+    <form method="POST" action="./funcionalidades/clientes/altaClientes.php">
         DNI: <input type="text" name="dni" required><br>
         Nombre: <input type="text" name="nombre" required><br>
         Dirección: <input type="text" name="direccion" required><br>

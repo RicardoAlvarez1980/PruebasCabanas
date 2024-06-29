@@ -6,11 +6,28 @@ require_once 'funcionalidades/clientes/listarClientes.php';
 require_once 'funcionalidades/reservas/listarReservas.php';
 require_once 'funcionalidades/cabanas/listarCabanas.php';
 
-
 // Obtener datos
 $clientes = obtenerClientes();
 $cabanas = obtenerCabanas();
 $reservas = obtenerReservas();
+
+// Verificar si se está enviando el formulario para agregar cliente
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $dni = $_POST['dni'];
+    $nombre = $_POST['nombre'];
+    $direccion = $_POST['direccion'];
+    $telefono = $_POST['telefono'];
+    $email = $_POST['email'];
+
+    // Insertar en la base de datos
+    $conexion = Database::obtenerInstancia()->obtenerConexion();
+    $stmt = $conexion->prepare("INSERT INTO clientes (dni, nombre, direccion, telefono, email) VALUES (?, ?, ?, ?, ?)");
+    $stmt->execute([$dni, $nombre, $direccion, $telefono, $email]);
+
+    // Recargar la página para actualizar la lista de clientes
+    header("Location: index.php");
+    exit();
+}
 ?>
 
 <!DOCTYPE html>
@@ -31,9 +48,12 @@ $reservas = obtenerReservas();
         <!-- Botón de agregar alineado a la derecha -->
         <div class="text-right mb-3">
             <!-- Enlaces a los formularios de alta -->
-            <a href="../funcionalidades/clientes/altaClientes.php" class="btn btn-success">Agregar Cliente</a>
-            <a href="../funcionalidades/cabanas/altaCabanas.php" class="btn btn-success">Agregar Cabaña</a>
-            <a href="../funcionalidades/reservas/altaReservas.php" class="btn btn-success">Agregar Reserva</a>
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalAgregarCliente">
+                Agregar Cliente
+            </button>
+            <a href="funcionalidades/cabanas/altaCabanas.php" class="btn btn-success">Agregar Cabaña</a>
+            <a href="funcionalidades/reservas/altaReservas.php" class="btn btn-success">Agregar Reserva</a>
         </div>
 
         <!-- Tabla de Clientes -->
@@ -60,9 +80,9 @@ $reservas = obtenerReservas();
                             <td><?php echo $cliente->getTelefono(); ?></td>
                             <td><?php echo $cliente->getEmail(); ?></td>
                             <td>
-                                <a href="editarCliente.php?id=<?php echo htmlspecialchars($cliente->getDni()); ?>" class="btn btn-primary btn-sm">Editar</a>
-                                <a href="eliminarCliente.php?id=<?php echo htmlspecialchars($cliente->getDni()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
-                                <a href="verCliente.php?dni=<?php echo $cliente->getDni(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
+                                <a href="funcionalidades/clientes/editarCliente.php?id=<?php echo htmlspecialchars($cliente->getDni()); ?>" class="btn btn-primary btn-sm">Editar</a>
+                                <a href="funcionalidades/clientes/eliminarCliente.php?id=<?php echo htmlspecialchars($cliente->getDni()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
+                                <a href="funcionalidades/clientes/verCliente.php?dni=<?php echo $cliente->getDni(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -96,9 +116,9 @@ $reservas = obtenerReservas();
                             <td><?php echo $cabana->getDescripcion(); ?></td>
                             <td><?php echo $cabana->getCostoDiario(); ?></td>
                             <td>
-                                <a href="editarCabana.php?id=<?php echo htmlspecialchars($cabana->getNumero()); ?>" class="btn btn-primary btn-sm">Editar</a>
-                                <a href="eliminarCabana.php?id=<?php echo htmlspecialchars($cabana->getNumero()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
-                                <a href="verCabana.php?numero=<?php echo $cabana->getNumero(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
+                                <a href="funcionalidades/cabanas/editarCabana.php?id=<?php echo htmlspecialchars($cabana->getNumero()); ?>" class="btn btn-primary btn-sm">Editar</a>
+                                <a href="funcionalidades/cabanas/eliminarCabana.php?id=<?php echo htmlspecialchars($cabana->getNumero()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
+                                <a href="funcionalidades/cabanas/verCabana.php?numero=<?php echo $cabana->getNumero(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -140,9 +160,9 @@ $reservas = obtenerReservas();
                             <td><?php echo $reserva->getCabana()->getCostoDiario(); ?></td>
                             <td><?php echo $reserva->calcularCostoTotal(); ?></td>
                             <td>
-                                <a href="editarReserva.php?id=<?php echo htmlspecialchars($reserva->getNumero()); ?>" class="btn btn-primary btn-sm">Editar</a>
-                                <a href="eliminarReserva.php?id=<?php echo htmlspecialchars($reserva->getNumero()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
-                                <a href="verReserva.php?numero=<?php echo $reserva->getNumero(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
+                                <a href="funcionalidades/reservas/editarReserva.php?id=<?php echo htmlspecialchars($reserva->getNumero()); ?>" class="btn btn-primary btn-sm">Editar</a>
+                                <a href="funcionalidades/reservas/eliminarReserva.php?id=<?php echo htmlspecialchars($reserva->getNumero()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
+                                <a href="funcionalidades/reservas/verReserva.php?numero=<?php echo $reserva->getNumero(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
                             </td>
                         </tr>
                     <?php endforeach; ?>
@@ -156,10 +176,48 @@ $reservas = obtenerReservas();
 
     </div>
 
+    <!-- Modal Agregar Cliente -->
+    <div class="modal fade" id="modalAgregarCliente" tabindex="-1" role="dialog" aria-labelledby="modalAgregarClienteLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAgregarClienteLabel">Agregar Cliente</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgregarCliente" method="POST" action="index.php">
+                        <div class="form-group">
+                            <label for="dni">DNI:</label>
+                            <input type="text" class="form-control" id="dni" name="dni" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="nombre">Nombre:</label>
+                            <input type="text" class="form-control" id="nombre" name="nombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="direccion">Dirección:</label>
+                            <input type="text" class="form-control" id="direccion" name="direccion" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="telefono">Teléfono:</label>
+                            <input type="text" class="form-control" id="telefono" name="telefono" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email:</label>
+                            <input type="email" class="form-control" id="email" name="email" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Agregar Cliente</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Incluir jQuery desde CDN -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
-    <!-- JS de Bootstrap (opcional, para funcionalidades como dropdowns, modales, etc.) -->
+    <!-- JS de Bootstrap (para funcionalidades de modal) -->
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 
