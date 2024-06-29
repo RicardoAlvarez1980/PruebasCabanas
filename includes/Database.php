@@ -45,10 +45,4 @@ class Database
     {
         throw new RuntimeException('La clonación de esta instancia no está permitida.');
     }
-
-    // Método para verificar la conexión
-    public function verificarConexion()
-    {
-        return $this->conexion !== null;
-    }
 }

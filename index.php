@@ -1,3 +1,18 @@
+<?php
+// Incluir el archivo de conexión a la base de datos y clases necesarias
+require_once 'includes/Database.php';
+
+require_once 'funcionalidades/clientes/listarClientes.php';
+require_once 'funcionalidades/reservas/listarReservas.php';
+require_once 'funcionalidades/cabanas/listarCabanas.php';
+
+
+// Obtener datos
+$clientes = obtenerClientes();
+$cabanas = obtenerCabanas();
+$reservas = obtenerReservas();
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 
@@ -5,7 +20,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Listado de Clientes, Cabañas y Reservas</title>
-
     <!-- Enlace a Bootstrap CSS desde CDN -->
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
@@ -14,118 +28,18 @@
     <div class="container">
         <h1>Listado de Clientes, Cabañas y Reservas</h1>
 
-        <!-- PHP para obtener y mostrar datos -->
-        <?php
-        // Incluir el archivo de conexión a la base de datos
-        require_once 'includes/Database.php';
-        require_once 'clases/Clientes.php';
-        require_once 'clases/Cabanas.php';
-        require_once 'clases/Reservas.php';
-
-        // Función para obtener clientes como objetos Clientes
-        function obtenerClientes()
-        {
-            $db = Database::obtenerInstancia()->obtenerConexion();
-            $query = "SELECT dni, nombre, direccion, telefono, email FROM clientes"; // Asegúrate de seleccionar las columnas específicas que necesitas
-            $statement = $db->prepare($query);
-            $statement->execute();
-            $clientesData = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-            $clientes = [];
-            foreach ($clientesData as $clienteData) {
-                // Crear objeto Cliente y agregarlo al arreglo
-                $cliente = new Clientes(
-                    $clienteData['dni'],
-                    $clienteData['nombre'],
-                    $clienteData['direccion'],
-                    $clienteData['telefono'],
-                    $clienteData['email']
-                );
-                $clientes[] = $cliente;
-            }
-
-            return $clientes;
-        }
-
-        // Función para obtener cabañas como objetos Cabanas
-        function obtenerCabanas()
-        {
-            $db = Database::obtenerInstancia()->obtenerConexion();
-            $query = "SELECT numero, capacidad, descripcion, costo_diario FROM cabanas"; // Asegúrate de seleccionar las columnas específicas que necesitas
-            $statement = $db->prepare($query);
-            $statement->execute();
-            $cabanasData = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-            $cabanas = [];
-            foreach ($cabanasData as $cabanaData) {
-                // Crear objeto Cabana y agregarlo al arreglo
-                $cabana = new Cabanas(
-                    $cabanaData['numero'],
-                    $cabanaData['capacidad'],
-                    $cabanaData['descripcion'],
-                    $cabanaData['costo_diario']
-                );
-                $cabanas[] = $cabana;
-            }
-
-            return $cabanas;
-        }
-
-
-        // Función para obtener reservas
-        function obtenerReservas()
-        {
-            $db = Database::obtenerInstancia()->obtenerConexion();
-            $query = "SELECT r.numero_reserva, r.fecha_inicio, r.fecha_fin, c.dni as cliente_dni, c.nombre as cliente_nombre, c.direccion as cliente_direccion, c.telefono as cliente_telefono, c.email as cliente_email, ca.numero as cabana_numero, ca.capacidad as cabana_capacidad, ca.descripcion as cabana_descripcion, ca.costo_diario as cabana_costo_diario
-                      FROM Reservas r
-                      INNER JOIN Clientes c ON r.cliente_dni = c.dni
-                      INNER JOIN Cabanas ca ON r.cabana_numero = ca.numero";
-            $statement = $db->prepare($query);
-            $statement->execute();
-            $reservasData = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-            $reservas = [];
-            foreach ($reservasData as $reservaData) {
-                $cliente = new Clientes(
-                    $reservaData['cliente_dni'],
-                    $reservaData['cliente_nombre'],
-                    $reservaData['cliente_direccion'],
-                    $reservaData['cliente_telefono'],
-                    $reservaData['cliente_email']
-                );
-
-                $cabana = new Cabanas(
-                    $reservaData['cabana_numero'],
-                    $reservaData['cabana_capacidad'],
-                    $reservaData['cabana_descripcion'],
-                    $reservaData['cabana_costo_diario']
-                );
-
-                // Crear objeto Reservas y agregarlo al arreglo
-                $reserva = new Reservas(
-                    $reservaData['numero_reserva'],
-                    $reservaData['fecha_inicio'],
-                    $reservaData['fecha_fin'],
-                    $cliente,
-                    $cabana
-                );
-                $reservas[] = $reserva;
-            }
-
-            return $reservas;
-        }
-
-
-
-        // Obtener datos
-        $clientes = obtenerClientes();
-        $cabanas = obtenerCabanas();
-        $reservas = obtenerReservas();
-        ?>
+        <!-- Botón de agregar alineado a la derecha -->
+        <div class="text-right mb-3">
+            <!-- Enlaces a los formularios de alta -->
+            <a href="../funcionalidades/clientes/altaClientes.php" class="btn btn-success">Agregar Cliente</a>
+            <a href="../funcionalidades/cabanas/altaCabanas.php" class="btn btn-success">Agregar Cabaña</a>
+            <a href="../funcionalidades/reservas/altaReservas.php" class="btn btn-success">Agregar Reserva</a>
+        </div>
 
         <!-- Tabla de Clientes -->
         <h2>Listado de Clientes</h2>
         <table class="table table-striped">
+            <!-- Encabezados de la tabla -->
             <thead>
                 <tr>
                     <th>DNI</th>
@@ -133,21 +47,28 @@
                     <th>Dirección</th>
                     <th>Teléfono</th>
                     <th>Email</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($clientes as $cliente) : ?>
+                <?php if (!empty($clientes)) : ?>
+                    <?php foreach ($clientes as $cliente) : ?>
+                        <tr>
+                            <td><?php echo $cliente->getDni(); ?></td>
+                            <td><?php echo $cliente->getNombre(); ?></td>
+                            <td><?php echo $cliente->getDireccion(); ?></td>
+                            <td><?php echo $cliente->getTelefono(); ?></td>
+                            <td><?php echo $cliente->getEmail(); ?></td>
+                            <td>
+                                <a href="editarCliente.php?id=<?php echo htmlspecialchars($cliente->getDni()); ?>" class="btn btn-primary btn-sm">Editar</a>
+                                <a href="eliminarCliente.php?id=<?php echo htmlspecialchars($cliente->getDni()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
+                                <a href="verCliente.php?dni=<?php echo $cliente->getDni(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
                     <tr>
-                        <td><?php echo $cliente->getDni(); ?></td>
-                        <td><?php echo $cliente->getNombre(); ?></td>
-                        <td><?php echo $cliente->getDireccion(); ?></td>
-                        <td><?php echo $cliente->getTelefono(); ?></td>
-                        <td><?php echo $cliente->getEmail(); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php if (empty($clientes)) : ?>
-                    <tr>
-                        <td colspan="5">No hay clientes registrados.</td>
+                        <td colspan="6">No hay clientes registrados.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -156,26 +77,34 @@
         <!-- Tabla de Cabañas -->
         <h2>Listado de Cabañas</h2>
         <table class="table table-striped">
+            <!-- Encabezados de la tabla -->
             <thead>
                 <tr>
                     <th>Número</th>
                     <th>Capacidad</th>
                     <th>Descripción</th>
                     <th>Costo Diario</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($cabanas as $cabana) : ?>
+                <?php if (!empty($cabanas)) : ?>
+                    <?php foreach ($cabanas as $cabana) : ?>
+                        <tr>
+                            <td><?php echo $cabana->getNumero(); ?></td>
+                            <td><?php echo $cabana->getCapacidad(); ?></td>
+                            <td><?php echo $cabana->getDescripcion(); ?></td>
+                            <td><?php echo $cabana->getCostoDiario(); ?></td>
+                            <td>
+                                <a href="editarCabana.php?id=<?php echo htmlspecialchars($cabana->getNumero()); ?>" class="btn btn-primary btn-sm">Editar</a>
+                                <a href="eliminarCabana.php?id=<?php echo htmlspecialchars($cabana->getNumero()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
+                                <a href="verCabana.php?numero=<?php echo $cabana->getNumero(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
                     <tr>
-                        <td><?php echo $cabana->getNumero(); ?></td>
-                        <td><?php echo $cabana->getCapacidad(); ?></td>
-                        <td><?php echo $cabana->getDescripcion(); ?></td>
-                        <td><?php echo $cabana->getCostoDiario(); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php if (empty($cabanas)) : ?>
-                    <tr>
-                        <td colspan="4">No hay cabañas registradas.</td>
+                        <td colspan="5">No hay cabañas registradas.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
@@ -184,6 +113,7 @@
         <!-- Tabla de Reservas -->
         <h2>Listado de Reservas</h2>
         <table class="table table-striped">
+            <!-- Encabezados de la tabla -->
             <thead>
                 <tr>
                     <th>Número Reserva</th>
@@ -194,30 +124,38 @@
                     <th>Días</th>
                     <th>Costo Diario</th>
                     <th>Costo Total</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($reservas as $reserva) : ?>
+                <?php if (!empty($reservas)) : ?>
+                    <?php foreach ($reservas as $reserva) : ?>
+                        <tr>
+                            <td><?php echo $reserva->getNumero(); ?></td>
+                            <td><?php echo $reserva->getFechaInicio(); ?></td>
+                            <td><?php echo $reserva->getFechaFin(); ?></td>
+                            <td><?php echo $reserva->getCliente()->getNombre(); ?></td>
+                            <td><?php echo $reserva->getCabana()->getNumero(); ?></td>
+                            <td><?php echo $reserva->calcularDiferenciaDias(); ?></td>
+                            <td><?php echo $reserva->getCabana()->getCostoDiario(); ?></td>
+                            <td><?php echo $reserva->calcularCostoTotal(); ?></td>
+                            <td>
+                                <a href="editarReserva.php?id=<?php echo htmlspecialchars($reserva->getNumero()); ?>" class="btn btn-primary btn-sm">Editar</a>
+                                <a href="eliminarReserva.php?id=<?php echo htmlspecialchars($reserva->getNumero()); ?>" class="btn btn-danger btn-sm">Eliminar</a>
+                                <a href="verReserva.php?numero=<?php echo $reserva->getNumero(); ?>" class="btn btn-info btn-sm">Ver Detalles</a>
+                            </td>
+                        </tr>
+                    <?php endforeach; ?>
+                <?php else : ?>
                     <tr>
-                        <td><?php echo $reserva->getNumero(); ?></td>
-                        <td><?php echo $reserva->getFechaInicio(); ?></td>
-                        <td><?php echo $reserva->getFechaFin(); ?></td>
-                        <td><?php echo $reserva->getCliente()->getNombre(); ?></td>
-                        <td><?php echo $reserva->getCabana()->getNumero(); ?></td>
-                        <td><?php echo $reserva->calcularDiferenciaDias(); ?></td>
-                        <td><?php echo $reserva->getCabana()->getCostoDiario(); ?></td>
-                        <td><?php echo $reserva->calcularCostoTotal(); ?></td>
-                    </tr>
-                <?php endforeach; ?>
-                <?php if (empty($reservas)) : ?>
-                    <tr>
-                        <td colspan="6">No hay reservas registradas.</td>
+                        <td colspan="9">No hay reservas registradas.</td>
                     </tr>
                 <?php endif; ?>
             </tbody>
         </table>
 
     </div>
+
     <!-- Incluir jQuery desde CDN -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
