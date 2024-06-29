@@ -96,28 +96,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     altaReserva();
 }
 ?>
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <title>Alta de Reserva</title>
-</head>
-<body>
-    <h1>Alta de Reserva</h1>
-    <form method="POST" action="altareservas.php">
-        <label for="dni_cliente">DNI del Cliente:</label>
-        <input type="text" id="dni_cliente" name="dni_cliente" required><br><br>
-
-        <label for="numero_cabana">Número de Cabaña:</label>
-        <input type="text" id="numero_cabana" name="numero_cabana" required><br><br>
-
-        <label for="fecha_inicio">Fecha de Inicio:</label>
-        <input type="date" id="fecha_inicio" name="fecha_inicio" required><br><br>
-
-        <label for="fecha_fin">Fecha de Fin:</label>
-        <input type="date" id="fecha_fin" name="fecha_fin" required><br><br>
-
-        <input type="submit" value="Confirmar Reserva">
-    </form>
-</body>
-</html>
