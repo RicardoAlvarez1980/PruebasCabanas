@@ -11,25 +11,58 @@ $clientes = obtenerClientes();
 $cabanas = obtenerCabanas();
 $reservas = obtenerReservas();
 
-// Verificar si se está enviando el formulario para agregar cliente
+// Verificar si se está enviando el formulario para agregar cliente, cabaña o reserva
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $dni = $_POST['dni'];
-    $nombre = $_POST['nombre'];
-    $direccion = $_POST['direccion'];
-    $telefono = $_POST['telefono'];
-    $email = $_POST['email'];
+    if (isset($_POST['tipo_formulario'])) {
+        switch ($_POST['tipo_formulario']) {
+            case 'cliente':
+                $dni = $_POST['dni'];
+                $nombre = $_POST['nombre'];
+                $direccion = $_POST['direccion'];
+                $telefono = $_POST['telefono'];
+                $email = $_POST['email'];
 
-    // Insertar en la base de datos
-    $conexion = Database::obtenerInstancia()->obtenerConexion();
-    $stmt = $conexion->prepare("INSERT INTO clientes (dni, nombre, direccion, telefono, email) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$dni, $nombre, $direccion, $telefono, $email]);
+                // Insertar cliente en la base de datos
+                $conexion = Database::obtenerInstancia()->obtenerConexion();
+                $stmt = $conexion->prepare("INSERT INTO clientes (dni, nombre, direccion, telefono, email) VALUES (?, ?, ?, ?, ?)");
+                $stmt->execute([$dni, $nombre, $direccion, $telefono, $email]);
+                break;
 
-    // Recargar la página para actualizar la lista de clientes
-    header("Location: index.php");
-    exit();
+            case 'cabana':
+                $numero = $_POST['numero'];
+                $capacidad = $_POST['capacidad'];
+                $descripcion = $_POST['descripcion'];
+                $costo_diario = $_POST['costo_diario'];
+
+                // Insertar cabaña en la base de datos
+                $conexion = Database::obtenerInstancia()->obtenerConexion();
+                $stmt = $conexion->prepare("INSERT INTO cabanas (numero, capacidad, descripcion, costo_diario) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$numero, $capacidad, $descripcion, $costo_diario]);
+                break;
+
+            case 'reserva':
+                $fecha_inicio = $_POST['fecha_inicio'];
+                $fecha_fin = $_POST['fecha_fin'];
+                $cliente_dni = $_POST['cliente'];
+                $cabana_numero = $_POST['cabana'];
+
+                // Insertar reserva en la base de datos
+                $conexion = Database::obtenerInstancia()->obtenerConexion();
+                $stmt = $conexion->prepare("INSERT INTO reservas (fecha_inicio, fecha_fin, cliente_dni, cabana_numero) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$fecha_inicio, $fecha_fin, $cliente_dni, $cabana_numero]);
+                break;
+
+            default:
+                // Manejo de error o acción predeterminada
+                break;
+        }
+
+        // Redirigir para evitar envío repetido del formulario
+        header("Location: index.php");
+        exit();
+    }
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="es">
 
@@ -52,8 +85,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalAgregarCliente">
                 Agregar Cliente
             </button>
-            <a href="funcionalidades/cabanas/altaCabanas.php" class="btn btn-success">Agregar Cabaña</a>
-            <a href="funcionalidades/reservas/altaReservas.php" class="btn btn-success">Agregar Reserva</a>
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalAgregarCabana">
+                Agregar Cabaña
+            </button>
+            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#modalAgregarReserva">
+                Agregar Reserva
+            </button>
         </div>
 
         <!-- Tabla de Clientes -->
@@ -188,6 +225,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
                 <div class="modal-body">
                     <form id="formAgregarCliente" method="POST" action="index.php">
+                        <input type="hidden" name="tipo_formulario" value="cliente">
                         <div class="form-group">
                             <label for="dni">DNI:</label>
                             <input type="text" class="form-control" id="dni" name="dni" required>
@@ -209,6 +247,86 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             <input type="email" class="form-control" id="email" name="email" required>
                         </div>
                         <button type="submit" class="btn btn-primary">Agregar Cliente</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Cabaña -->
+    <div class="modal fade" id="modalAgregarCabana" tabindex="-1" role="dialog" aria-labelledby="modalAgregarCabanaLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAgregarCabanaLabel">Agregar Cabaña</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgregarCabana" method="POST" action="index.php">
+                        <input type="hidden" name="tipo_formulario" value="cabana">
+                        <div class="form-group">
+                            <label for="numero">Número:</label>
+                            <input type="text" class="form-control" id="numero" name="numero" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="capacidad">Capacidad:</label>
+                            <input type="number" class="form-control" id="capacidad" name="capacidad" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="descripcion">Descripción:</label>
+                            <input type="text" class="form-control" id="descripcion" name="descripcion" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="costo_diario">Costo Diario:</label>
+                            <input type="text" class="form-control" id="costo_diario" name="costo_diario" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Agregar Cabaña</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Agregar Reserva -->
+    <div class="modal fade" id="modalAgregarReserva" tabindex="-1" role="dialog" aria-labelledby="modalAgregarReservaLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalAgregarReservaLabel">Agregar Reserva</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="formAgregarReserva" method="POST" action="index.php">
+                        <input type="hidden" name="tipo_formulario" value="reserva">
+                        <div class="form-group">
+                            <label for="fecha_inicio">Fecha Inicio:</label>
+                            <input type="date" class="form-control" id="fecha_inicio" name="fecha_inicio" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="fecha_fin">Fecha Fin:</label>
+                            <input type="date" class="form-control" id="fecha_fin" name="fecha_fin" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="cliente">Cliente:</label>
+                            <select class="form-control" id="cliente" name="cliente" required>
+                                <?php foreach ($clientes as $cliente) : ?>
+                                    <option value="<?php echo $cliente->getDni(); ?>"><?php echo $cliente->getNombre(); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cabana">Cabaña:</label>
+                            <select class="form-control" id="cabana" name="cabana" required>
+                                <?php foreach ($cabanas as $cabana) : ?>
+                                    <option value="<?php echo $cabana->getNumero(); ?>"><?php echo $cabana->getNumero(); ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Agregar Reserva</button>
                     </form>
                 </div>
             </div>
